@@ -638,6 +638,89 @@
   }
   .nav-links a:hover{ color: var(--gold); }
 
+  /* GIFT MODAL */
+  .gift-modal-overlay{
+    display:none;
+    position:fixed; inset:0; z-index:200;
+    background:rgba(58,22,32,0.55);
+    backdrop-filter:blur(4px);
+    align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .gift-modal-overlay.open{ display:flex; }
+  .gift-modal{
+    background:var(--cream);
+    border:1px solid rgba(184,137,63,0.4);
+    border-radius:10px;
+    max-width:760px; width:100%;
+    max-height:90vh; overflow-y:auto;
+    padding:40px 32px 36px;
+    position:relative;
+    box-shadow:0 24px 80px rgba(58,22,32,0.35);
+    text-align:center;
+  }
+  .gift-close{
+    position:absolute; top:14px; right:18px;
+    background:none; border:none;
+    font-size:1.8rem; line-height:1;
+    color:var(--maroon); cursor:pointer;
+    opacity:0.6; transition:opacity .2s ease;
+  }
+  .gift-close:hover{ opacity:1; }
+  .gift-modal-title{
+    font-family:'Marcellus',serif;
+    font-size:clamp(1.5rem,4vw,2rem);
+    color:var(--maroon-deep);
+    margin-bottom:8px;
+  }
+  .gift-modal-sub{
+    font-family:'Cormorant Garamond',serif;
+    font-style:italic;
+    color:var(--maroon);
+    font-size:1rem;
+    margin-bottom:30px;
+    opacity:0.85;
+  }
+  .gift-options{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:24px;
+  }
+  @media(max-width:640px){ .gift-options{ grid-template-columns:1fr; gap:28px; } }
+  .gift-option{
+    display:flex; flex-direction:column;
+    align-items:center; gap:14px;
+  }
+  .gift-option-name{
+    font-family:'Marcellus',serif;
+    font-size:1.1rem;
+    color:var(--maroon-deep);
+    letter-spacing:0.05em;
+  }
+  .gift-qr{
+    width:100%; max-width:180px;
+    border:1px solid rgba(184,137,63,0.3);
+    border-radius:6px;
+    background:white;
+    padding:8px;
+  }
+  .gift-btn{
+    display:none;
+    padding:12px 20px;
+    background:var(--maroon);
+    color:var(--cream);
+    text-decoration:none;
+    font-size:0.8rem; letter-spacing:0.08em;
+    border-radius:999px;
+    transition:background .25s ease;
+    width:100%;
+    box-sizing:border-box;
+  }
+  .gift-btn:hover{ background:var(--maroon-deep); }
+  /* On mobile, show buttons and hide QRs */
+  body.is-mobile .gift-qr{ display:none; }
+  body.is-mobile .gift-btn{ display:inline-block; }
+
   @media (prefers-reduced-motion: reduce){
     .petal{ animation: none; display:none; }
     .scroll-cue{ animation: none; }
@@ -832,12 +915,11 @@
   <h2 class="section-title reveal">Registry</h2>
   <p class="registry-text reveal">Your love, presence, and support mean more to us than any gift ever could, and they are all we need. If you'd like to honor us with something extra, a contribution toward our future home would be deeply appreciated. Above all, we simply can't wait to celebrate with you!</p>
   <div class="registry-links reveal">
-    <!-- <a href="#" target="_blank">Amazon Registry</a> -->
-    <a href="https://venmo.com/code?user_id=3364108380405760852&created=1784632973" target="_blank">Gift Toward Our Home</a>
+    <a href="#" onclick="openGiftModal(event)">Gift Toward Our Home</a>
   </div>
 </section>
 
-<!-- FAQ -->
+<!-- GIFT MODAL -->
 <section class="faq" id="faq">
   <div class="eyebrow reveal">Good to Know</div>
   <h2 class="section-title reveal">FAQ</h2>
@@ -969,6 +1051,31 @@
     document.getElementById('polaroid').addEventListener('click', () => goTo((current+1) % photos.length));
     setInterval(() => goTo((current+1) % photos.length), 4000);
   }
+
+  // Gift modal
+  const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if(isMobile){
+    document.body.classList.add('is-mobile');
+    const sub = document.getElementById('giftModalSub');
+    if(sub) sub.textContent = 'Tap an option to send your gift';
+  }
+  window.openGiftModal = function(e){
+    if(e) e.preventDefault();
+    document.getElementById('giftModal').classList.add('open');
+  };
+  window.closeGiftModal = function(e){
+    if(e) e.preventDefault();
+    document.getElementById('giftModal').classList.remove('open');
+  };
+  window.copyZelle = function(e){
+    e.preventDefault();
+    navigator.clipboard.writeText('+1 (617) 412-5720').then(() => {
+      const btn = document.getElementById('zelleBtn');
+      const orig = btn.textContent;
+      btn.textContent = 'Copied! ✓';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  };
 
   // FAQ accordion
   document.querySelectorAll('.faq-item').forEach(item=>{
