@@ -240,10 +240,18 @@
   .polaroid-img{
     width:100%; aspect-ratio:4/5;
     overflow:hidden;
+    background:var(--cream-deep);
   }
-  .polaroid-img img{ width:100%; height:100%; object-fit:cover; display:block; transition:opacity .2s ease; }
+  .polaroid-img img{
+    width:100%; height:100%;
+    object-fit:cover; display:block;
+    transition:opacity .32s ease;
+    will-change:opacity;
+    backface-visibility:hidden;
+  }
   .polaroid-caption{
     text-align:center; padding-top:14px;
+    min-height:1.4em;
     font-family:'Cormorant Garamond',serif;
     font-style:italic; color:var(--maroon);
     font-size:0.9rem;
@@ -1054,27 +1062,55 @@
   const dotsEl = document.getElementById('swiper-dots');
 
   if(photoEl && dotsEl){
+    // Preload all photos so swaps are instant
+    const preloaded = photos.map(src => { const im = new Image(); im.src = src; return im; });
+
     photos.forEach((_, i) => {
       const dot = document.createElement('div');
       dot.className = 'swiper-dot' + (i===0?' active':'');
-      dot.addEventListener('click', () => goTo(i));
+      dot.addEventListener('click', () => { goTo(i); resetTimer(); });
       dotsEl.appendChild(dot);
     });
 
+    let transitioning = false;
+    let timer = null;
+
     function goTo(idx){
+      if(transitioning || idx === current) return;
+      transitioning = true;
       current = idx;
+
+      dotsEl.querySelectorAll('.swiper-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+
       photoEl.style.opacity = '0';
       setTimeout(() => {
-        photoEl.src = photos[idx];
-        photoEl.style.opacity = '1';
-        captionEl.textContent = captions[idx];
-      }, 200);
-      dotsEl.querySelectorAll('.swiper-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+        const swap = () => {
+          photoEl.src = photos[idx];
+          captionEl.textContent = captions[idx];
+          requestAnimationFrame(() => {
+            photoEl.style.opacity = '1';
+            setTimeout(() => { transitioning = false; }, 320);
+          });
+        };
+        // Only swap once the image is actually ready
+        if(preloaded[idx].complete){
+          swap();
+        } else {
+          preloaded[idx].onload = swap;
+          preloaded[idx].onerror = swap;
+        }
+      }, 320);
     }
 
-    photoEl.style.transition = 'opacity .2s ease';
-    document.getElementById('polaroid').addEventListener('click', () => goTo((current+1) % photos.length));
-    setInterval(() => goTo((current+1) % photos.length), 4000);
+    function next(){ goTo((current + 1) % photos.length); }
+    function resetTimer(){
+      clearInterval(timer);
+      timer = setInterval(next, 5000);
+    }
+
+    photoEl.style.transition = 'opacity .32s ease';
+    document.getElementById('polaroid').addEventListener('click', () => { next(); resetTimer(); });
+    resetTimer();
   }
 
   // Gift modal
